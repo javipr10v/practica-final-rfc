@@ -1,0 +1,7 @@
+// P4: palabra inconveniente (R7)
+persona alumno1 {
+    nombre = "Óscar";
+    paterno = "Pérez";
+    materno = "Díaz";
+    fecha_nac = 08/12/1995;
+}

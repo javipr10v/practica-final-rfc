@@ -1,0 +1,6 @@
+// E1: carácter inesperado fuera de una cadena
+persona alumno1 {
+    nombre = "Juan";
+    paterno # "Pérez";
+    fecha_nac = 17/05/1990;
+}

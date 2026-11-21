@@ -1,0 +1,6 @@
+// E3: fecha que no existe
+persona alumno1 {
+    nombre = "Laura";
+    paterno = "Gómez";
+    fecha_nac = 30/02/1998;
+}

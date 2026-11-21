@@ -1,0 +1,7 @@
+// P1: caso general
+persona alumno1 {
+    nombre = "Juan";
+    paterno = "Pérez";
+    materno = "López";
+    fecha_nac = 17/05/1990;
+}

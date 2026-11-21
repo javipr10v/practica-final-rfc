@@ -1,0 +1,6 @@
+// P3: sin apellido materno, año bisiesto
+persona alumno1 {
+    nombre = "José Luis";
+    paterno = "Hernández";
+    fecha_nac = 29/02/2000;
+}

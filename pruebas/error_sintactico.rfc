@@ -1,0 +1,6 @@
+// E2: campo sin ';' al final
+persona alumno1 {
+    nombre = "Juan"
+    paterno = "Pérez";
+    fecha_nac = 17/05/1990;
+}

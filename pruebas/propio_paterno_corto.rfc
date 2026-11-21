@@ -1,0 +1,7 @@
+// Propio 1: apellido paterno de dos letras (R5)
+persona alumno1 {
+    nombre = "Ana";
+    paterno = "Ek";
+    materno = "Mena";
+    fecha_nac = 01/01/1999;
+}

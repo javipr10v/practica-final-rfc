@@ -1,0 +1,11 @@
+// Varios errores semánticos en un mismo archivo
+persona alumno1 {
+    nombre = "Ju4n";
+    paterno = "Pérez";
+    edad = "veinte";
+    fecha_nac = "17/05/1990";
+}
+persona alumno1 {
+    nombre = "Ana";
+    fecha_nac = 29/02/1999;
+}

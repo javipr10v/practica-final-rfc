@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador de RFC</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230e6b5c'/%3E%3Ctext x='50' y='63' font-size='38' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3ERFC%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f4f1ea; --surface: #ffffff; --ink: #1d2a2a; --muted: #66736f; --line: #e2ddd0;
+    --brand: #0e6b5c; --brand-ink: #ffffff; --brand-soft: #e0f0ec; --accent: #e0a526;
+    --good: #1e7a46; --good-soft: #e3f3e9; --bad: #b4291f; --bad-soft: #fbe8e5;
+    --code: #faf8f3; --shadow: 0 1px 2px rgba(20, 40, 35, .06), 0 10px 28px rgba(20, 40, 35, .07);
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1615; --surface: #16211f; --ink: #e7efec; --muted: #93a5a0; --line: #263634;
+      --brand: #4fc3ad; --brand-ink: #08201b; --brand-soft: #17332e; --accent: #e8b94a;
+      --good: #6fd39a; --good-soft: #173326; --bad: #ff9a8f; --bad-soft: #3b1f1c;
+      --code: #111b19; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .35);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+
+  /* ---------- cabecera ---------- */
+  header { background: linear-gradient(115deg, #0a4a40 0%, #0e6b5c 60%, #14806d 100%); color: #fff; }
+  .cabecera { max-width: 1240px; margin: 0 auto; padding: 22px 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .logo { width: 48px; height: 48px; flex: none; }
+  .titulos h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+  .titulos p { margin: 2px 0 0; opacity: .85; font-size: 14px; }
+  .etiqueta { margin-left: auto; padding: 5px 14px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; font-size: 12.5px; background: rgba(255, 255, 255, .1); }
+  header::after { content: ""; display: block; height: 4px; background: linear-gradient(90deg, var(--accent), #f3cf74, var(--accent)); }
+
+  /* ---------- estructura ---------- */
+  main { max-width: 1240px; margin: 0 auto; padding: 24px 28px 40px; display: grid; grid-template-columns: minmax(320px, 5fr) 7fr; gap: 22px; align-items: start; }
+  @media (max-width: 920px) { main { grid-template-columns: 1fr; padding: 16px; } .cabecera { padding: 18px 16px; } }
+  .tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+  .tarjeta + .tarjeta { margin-top: 18px; }
+  h2 { margin: 0 0 14px; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .derecha { min-width: 0; }
+
+  /* ---------- controles ---------- */
+  .segmentos { display: inline-flex; padding: 3px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 16px; }
+  .segmentos button { border: 0; background: none; color: var(--muted); padding: 6px 16px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+  .segmentos button.activa { background: var(--surface); color: var(--brand); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+  label small { font-weight: 400; color: var(--muted); }
+  input, select { width: 100%; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; transition: border-color .15s, box-shadow .15s; }
+  input:focus, select:focus, textarea:focus-visible { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .campos .ancho { grid-column: 1 / -1; }
+  @media (max-width: 520px) { .campos { grid-template-columns: 1fr; } }
+  .ayuda { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+  .ayuda code, .nota code { background: var(--code); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-family: var(--mono); font-size: 12.5px; }
+  button.boton { font: inherit; font-weight: 600; cursor: pointer; border-radius: 9px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  button.boton:hover { border-color: var(--brand); color: var(--brand); }
+  button.boton.principal { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  button.boton.principal:hover { filter: brightness(1.08); color: var(--brand-ink); }
+
+  /* ---------- editor ---------- */
+  .selector { margin-bottom: 12px; }
+  .editor { display: flex; border: 1px solid var(--line); border-radius: 10px; background: var(--code); overflow: hidden; }
+  .editor:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  #numeros { width: 46px; flex: none; padding: 12px 0; text-align: right; color: var(--muted); font: 12.5px/22px var(--mono); user-select: none; overflow: hidden; border-right: 1px solid var(--line); }
+  #numeros span { display: block; padding-right: 10px; }
+  #numeros span.mala { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
+  #fuente { flex: 1; min-width: 0; height: 330px; border: 0; outline: 0; resize: none; padding: 12px; background: transparent; color: var(--ink); font: 13.5px/22px var(--mono); white-space: pre; overflow: auto; tab-size: 4; }
+
+  /* ---------- pasos ---------- */
+  .pasos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; }
+  .paso-fase { text-align: center; position: relative; padding: 0 4px; }
+  .paso-fase::before { content: ""; position: absolute; top: 17px; left: -50%; width: 100%; height: 2px; background: var(--line); z-index: 0; }
+  .paso-fase:first-child::before { display: none; }
+  .paso-fase.ok::before { background: var(--good); }
+  .burbuja { position: relative; z-index: 1; width: 36px; height: 36px; margin: 0 auto 6px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--surface); border: 2px solid var(--line); color: var(--muted); transition: all .25s; }
+  .paso-fase.ok .burbuja { background: var(--good); border-color: var(--good); color: #fff; }
+  .paso-fase.error .burbuja { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .paso-fase.omitida { opacity: .45; }
+  .paso-fase b { display: block; font-size: 13.5px; }
+  .paso-fase small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+  @media (max-width: 520px) { .paso-fase small { display: none; } }
+
+  /* ---------- RFC ---------- */
+  .persona { padding: 6px 0 4px; }
+  .persona + .persona { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 18px; }
+  .persona-cabecera { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .persona-cabecera .nombre { font-weight: 700; }
+  .insignia { padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+  .insignia.ok { background: var(--good-soft); color: var(--good); }
+  .insignia.error { background: var(--bad-soft); color: var(--bad); }
+  .persona-cabecera .boton { margin-left: auto; padding: 4px 12px; font-size: 13px; }
+  .grupos { display: flex; flex-wrap: wrap; gap: 14px 22px; }
+  .grupo .casillas { display: flex; gap: 5px; }
+  .grupo .rotulo { margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+  .casilla { width: 36px; height: 48px; display: grid; place-items: center; border-radius: 8px; font: 700 22px var(--mono); border: 1.5px solid; animation: entra .35s both; }
+  .letras .casilla { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); }
+  .fecha .casilla { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); border-color: var(--accent); color: var(--ink); }
+  .fantasma .casilla { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); font-weight: 400; }
+  @media (max-width: 520px) { .casilla { width: 28px; height: 42px; font-size: 18px; } .grupo .casillas { gap: 3px; } }
+  @keyframes entra { from { opacity: 0; transform: translateY(8px) scale(.9); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .casilla { animation: none; } .burbuja { transition: none; } }
+  .vacio { color: var(--muted); margin: 0; padding: 18px 0; text-align: center; }
+
+  /* ---------- errores ---------- */
+  .errores { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+  .errores li { padding: 10px 14px; background: var(--bad-soft); color: var(--bad); border-left: 4px solid var(--bad); border-radius: 6px; font-size: 14px; }
+  .errores li small { display: block; opacity: .75; font-size: 12px; }
+
+  /* ---------- pestañas ---------- */
+  .pestanas { display: flex; gap: 4px; margin: -4px 0 14px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .pestanas button { border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 14px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+  .pestanas button.activa { color: var(--brand); border-bottom-color: var(--accent); }
+  pre { margin: 0; padding: 14px; background: var(--code); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; font: 13.5px/1.6 var(--mono); }
+  .tabla { overflow-x: auto; max-height: 360px; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font: 13px var(--mono); }
+  th, td { text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--code); color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  .explica { margin: 0 0 12px; font-size: 13.5px; color: var(--muted); }
+
+  /* ---------- verificador de formato ---------- */
+  .recorrido { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 14px; }
+  .pieza { width: 38px; padding: 5px 0 4px; text-align: center; border: 1.5px solid var(--line); border-radius: 8px; background: var(--code); font-family: var(--mono); }
+  .pieza .ch { display: block; font-weight: 700; font-size: 16px; }
+  .pieza .n { display: block; font-size: 10.5px; color: var(--muted); }
+  .pieza.letra { border-color: var(--brand); }
+  .pieza.digito { border-color: var(--accent); }
+  .pieza.final { background: var(--good-soft); border-color: var(--good); }
+  .pieza.mala { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .pieza.sin-leer { opacity: .35; border-style: dashed; }
+  .probador { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+  .probador input { width: 220px; font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+  .atajos { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .atajos button { font: 12.5px var(--mono); padding: 3px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .atajos button:hover { border-color: var(--brand); color: var(--brand); }
+  h3 { margin: 20px 0 2px; font-size: 14px; }
+  .nota { margin: 12px 0 0; font-size: 13px; color: var(--muted); background: var(--brand-soft); border-radius: 8px; padding: 10px 14px; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 0 16px 28px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="cabecera">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+      <rect width="100" height="100" rx="22" fill="#fff" fill-opacity=".14"/>
+      <rect x="6" y="6" width="88" height="88" rx="18" fill="none" stroke="#e0a526" stroke-width="3"/>
+      <text x="50" y="62" font-size="34" font-family="Arial, sans-serif" font-weight="700" fill="#fff" text-anchor="middle">RFC</text>
+    </svg>
+    <div class="titulos">
+      <h1>Generador de RFC</h1>
+      <p>Obtén las 10 primeras posiciones del RFC de una persona física</p>
+    </div>
+    <span class="etiqueta">Sin homoclave</span>
+  </div>
+</header>
+
+<main>
+  <div>
+    <section class="tarjeta">
+      <h2>Datos de la persona</h2>
+      <div class="segmentos" id="modos" role="tablist">
+        <button class="activa" data-modo="formulario" role="tab">Formulario</button>
+        <button data-modo="codigo" role="tab">Texto avanzado</button>
+      </div>
+
+      <div id="vista-formulario">
+        <div class="campos">
+          <div class="ancho"><label for="f-nombre">Nombre(s)</label><input id="f-nombre" autocomplete="off" value="María Guadalupe"></div>
+          <div><label for="f-paterno">Apellido paterno</label><input id="f-paterno" autocomplete="off" value="De la Cruz"></div>
+          <div><label for="f-materno">Apellido materno <small>(opcional)</small></label><input id="f-materno" autocomplete="off" value="Núñez"></div>
+          <div class="ancho"><label for="f-fecha">Fecha de nacimiento <small>(día/mes/año)</small></label><input id="f-fecha" autocomplete="off" placeholder="03/11/1985" value="03/11/1985"></div>
+        </div>
+        <p class="ayuda">Prueba con una fecha inexistente como <code>30/02/1998</code> o deja vacío el materno.</p>
+      </div>
+
+      <div id="vista-codigo" hidden>
+        <div class="selector">
+          <select id="ejemplos" aria-label="Cargar un ejemplo"><option value="">Cargar un ejemplo…</option></select>
+        </div>
+        <div class="editor">
+          <div id="numeros" aria-hidden="true"></div>
+          <textarea id="fuente" spellcheck="false" wrap="off" aria-label="Datos en texto"></textarea>
+        </div>
+        <p class="ayuda">Aquí puedes escribir varias personas a la vez. Se revisa mientras escribes. Prueba quitar un <code>;</code> o escribir un <code>#</code>.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="derecha">
+    <section class="tarjeta">
+      <h2>Proceso</h2>
+      <div class="pasos" id="fases"></div>
+    </section>
+
+    <section class="tarjeta">
+      <h2 id="titulo-resultado">Resultado</h2>
+      <div id="resultado"></div>
+    </section>
+
+    <section class="tarjeta">
+      <div class="pestanas" id="pestanas">
+        <button data-p="piezas" class="activa">Piezas del texto</button>
+        <button data-p="estructura">Estructura</button>
+        <button data-p="datos">Datos registrados</button>
+        <button data-p="formato">Verificador de formato</button>
+      </div>
+      <div id="p-piezas"></div>
+      <div id="p-estructura" hidden></div>
+      <div id="p-datos" hidden></div>
+      <div id="p-formato" hidden></div>
+    </section>
+  </div>
+</main>
+<footer>Versión didáctica. Para trámites oficiales consulta siempre la información vigente del SAT.</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function el(tag, props = {}, ...hijos) {
+  const nodo = Object.assign(document.createElement(tag), props);
+  nodo.append(...hijos);
+  return nodo;
+}
+
+async function pedir(ruta, cuerpo) {
+  const r = await fetch(ruta, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
+  return r.json();
+}
+
+const FASES = [
+  ["lexico", "Lectura", "Revisa los símbolos"],
+  ["sintactico", "Estructura", "Revisa el orden"],
+  ["semantico", "Validación", "Revisa los datos"],
+  ["generador", "Cálculo", "Genera y verifica"],
+];
+const TITULO_ERRORES = {
+  lexico: "Hay símbolos que no se reconocen",
+  sintactico: "Hay algo mal escrito",
+  semantico: "Hay datos que corregir",
+};
+const TIPOS = {
+  PALABRA_RESERVADA: "palabra clave", ID: "nombre", ASIGNA: "igual", PYC: "punto y coma",
+  LLAVE_IZQ: "llave que abre", LLAVE_DER: "llave que cierra", CADENA: "texto", FECHA: "fecha", EOF: "fin del texto",
+};
+const ETIQUETAS_EJEMPLOS = {
+  "valido1.rfc": ["Juan Pérez · caso general", true],
+  "valido2.rfc": ["María Guadalupe De la Cruz · nombre compuesto", true],
+  "valido3.rfc": ["José Luis Hernández · sin materno", true],
+  "valido4.rfc": ["Óscar Pérez · palabra inconveniente", true],
+  "valido5.rfc": ["Pedro Ñáñez · con Ñ", true],
+  "propio_paterno_corto.rfc": ["Ana Ek · apellido de dos letras", true],
+  "propio_particulas.rfc": ["María José De la Garza · partículas", true],
+  "propio_varios_registros.rfc": ["Tres personas en un solo texto", true],
+  "error_lexico.rfc": ["Símbolo raro (#)", false],
+  "error_sintactico.rfc": ["Falta un punto y coma", false],
+  "error_fecha.rfc": ["Fecha que no existe", false],
+  "error_sin_paterno.rfc": ["Falta el apellido paterno", false],
+  "error_duplicado.rfc": ["Dato repetido", false],
+  "error_varios.rfc": ["Varios problemas a la vez", false],
+};
+
+/* ---- textos en lenguaje de todos los días ---- */
+const CAMBIOS = [
+  [/el programa está vacío, se esperaba al menos un registro 'persona'/, "no hay ninguna persona; escribe al menos una"],
+  [/falta PYC, se esperaba ';' después de/, "falta el punto y coma (;) después de"],
+  [/'=' \(ASIGNA\)/g, "el signo ="],
+  [/'persona' \(PALABRA_RESERVADA\)/g, "la palabra persona"],
+  [/un identificador \(ID\)/g, "el nombre de un dato"],
+  [/'\{' \(LLAVE_IZQ\)/g, "una llave {"],
+  [/'\}' \(LLAVE_DER\)/g, "una llave }"],
+  [/';' \(PYC\)/g, "un punto y coma (;)"],
+  [/una cadena o una fecha \(CADENA \| FECHA\)/g, "un texto entre comillas o una fecha"],
+  [/fin de archivo/g, "el final del texto"],
+  [/carácter inesperado/g, "símbolo inesperado"],
+  [/cadena sin cerrar/g, "texto sin cerrar, falta la comilla final"],
+  [/espera CADENA, recibió FECHA/g, "espera un texto, pero recibió una fecha"],
+  [/espera FECHA, recibió CADENA/g, "espera una fecha, pero recibió un texto"],
+  [/campo '([^']+)' desconocido/g, "el dato '$1' no existe"],
+  [/ya declarado/g, "ya se escribió antes"],
+  [/^Registro '/, "Persona '"],
+];
+const humano = (t) => CAMBIOS.reduce((acc, [a, b]) => acc.replace(a, b), t);
+const humanoEstructura = (l) => l.replace(/^Programa/, "Texto").replace(/Registro /, "Persona ")
+  .replace(/Campo /, "Dato ").replace("[CADENA]", "[texto]").replace("[FECHA]", "[fecha]");
+const humanoDatos = (l) => l.replace("Ámbito", "Persona").replace("CADENA", "texto ").replace("FECHA", "fecha");
+
+/* ---- editor con números de línea ---- */
+function pintarNumeros(malas = new Set()) {
+  const total = $("fuente").value.split("\n").length;
+  const cont = $("numeros");
+  cont.replaceChildren();
+  for (let i = 1; i <= total; i++) cont.append(el("span", { textContent: i, className: malas.has(i) ? "mala" : "" }));
+  cont.scrollTop = $("fuente").scrollTop;
+}
+
+/* ---- formulario -> texto ---- */
+const limpio = (t) => t.replace(/["\n\r]/g, "").trim();
+
+function fuenteDesdeFormulario() {
+  const nombre = limpio($("f-nombre").value), paterno = limpio($("f-paterno").value);
+  const materno = limpio($("f-materno").value), fecha = limpio($("f-fecha").value);
+  if (!nombre || !paterno || !fecha) return null;
+  const lineas = ["persona persona1 {", `    nombre = "${nombre}";`, `    paterno = "${paterno}";`];
+  if (materno) lineas.push(`    materno = "${materno}";`);
+  lineas.push(`    fecha_nac = ${fecha};`, "}");
+  return lineas.join("\n");
+}
+
+/* ---- dibujo de resultados ---- */
+function renderFases(fases) {
+  const cont = $("fases");
+  cont.replaceChildren();
+  FASES.forEach(([clave, titulo, sub], i) => {
+    const estado = fases[clave] || "pendiente";
+    const marca = estado === "ok" ? "✓" : estado === "error" ? "✕" : String(i + 1);
+    cont.append(el("div", { className: "paso-fase " + estado },
+      el("div", { className: "burbuja", textContent: marca }),
+      el("b", { textContent: titulo }), el("small", { textContent: sub })));
+  });
+}
+
+function casillas(texto, clase, rotulo) {
+  const fila = el("div", { className: "casillas" });
+  [...texto].forEach((c, i) => fila.append(el("span", { className: "casilla", textContent: c, style: `animation-delay:${i * 35}ms` })));
+  return el("div", { className: "grupo " + clase }, fila, el("div", { className: "rotulo", textContent: rotulo }));
+}
+
+function renderResultado(d) {
+  const cont = $("resultado");
+  cont.replaceChildren();
+  if (d.errores && d.errores.length) {
+    $("titulo-resultado").textContent = TITULO_ERRORES[d.fase_con_error];
+    const lista = el("ul", { className: "errores" });
+    d.errores.forEach((e) => lista.append(el("li", { textContent: humano(e) })));
+    cont.append(lista);
+    return;
+  }
+  $("titulo-resultado").textContent = "Resultado";
+  if (!d.resultados || !d.resultados.length) {
+    cont.append(el("p", { className: "vacio", textContent: "Llena los datos de la persona para ver su RFC." }));
+    return;
+  }
+  for (const r of d.resultados) {
+    const copiar = el("button", { className: "boton", textContent: "Copiar", type: "button" });
+    copiar.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(r.rfc);
+      copiar.textContent = "¡Copiado!";
+      setTimeout(() => (copiar.textContent = "Copiar"), 1400);
+    });
+    cont.append(el("div", { className: "persona" },
+      el("div", { className: "persona-cabecera" },
+        el("span", { className: "nombre", textContent: r.id }),
+        el("span", { className: "insignia " + (r.acepta ? "ok" : "error"), textContent: r.acepta ? "Formato correcto" : "Formato incorrecto" }),
+        copiar),
+      el("div", { className: "grupos" },
+        casillas(r.rfc.slice(0, 4), "letras", "Letras del nombre"),
+        casillas(r.rfc.slice(4, 10), "fecha", "Fecha · AA MM DD"),
+        casillas("???", "fantasma", "Homoclave · la asigna el SAT"))));
+  }
+}
+
+function renderPiezas(tokens) {
+  const tabla = el("table");
+  tabla.append(el("tr", {}, ...["Posición", "Tipo", "Texto"].map((t) => el("th", { textContent: t }))));
+  tokens.filter((t) => t.tipo !== "EOF").forEach((t) => tabla.append(el("tr", {},
+    el("td", { textContent: `línea ${t.linea}, col. ${t.columna}` }),
+    el("td", { textContent: TIPOS[t.tipo] || t.tipo }),
+    el("td", { textContent: t.lexema }))));
+  $("p-piezas").replaceChildren(
+    el("p", { className: "explica", textContent: "Así divide el generador lo que escribiste: cada palabra, símbolo, texto y fecha por separado." }),
+    tokens.length > 1 ? el("div", { className: "tabla" }, tabla) : el("p", { className: "vacio", textContent: "Aún no hay nada que mostrar." }));
+}
+
+function renderTexto(destino, lineas, intro, vacio, transformar) {
+  $(destino).replaceChildren(el("p", { className: "explica", textContent: intro }),
+    lineas.length ? el("pre", { textContent: lineas.map(transformar).join("\n") })
+                  : el("p", { className: "vacio", textContent: vacio }));
+}
+
+function recorrido(cadena, traza) {
+  const fila = el("div", { className: "recorrido" });
+  const leidos = traza.length - 1;
+  for (let i = 1; i <= leidos; i++) {
+    const estado = traza[i];
+    const c = cadena[i - 1];
+    const pieza = el("div", { className: "pieza " + (/[A-Z]/.test(c) ? "letra" : "digito") },
+      el("span", { className: "ch", textContent: c }), el("span", { className: "n", textContent: i }));
+    if (estado === "muerto") { pieza.className = "pieza mala"; pieza.querySelector(".n").textContent = "✕"; }
+    if (i === leidos && estado === "q13") pieza.classList.add("final");
+    fila.append(pieza);
+  }
+  for (let i = leidos; i < cadena.length; i++) {
+    fila.append(el("div", { className: "pieza sin-leer" }, el("span", { className: "ch", textContent: cadena[i] }), el("span", { className: "n", textContent: i + 1 })));
+  }
+  return fila;
+}
+
+function renderFormato(resultados) {
+  const cont = $("p-formato");
+  cont.replaceChildren(el("p", { className: "explica", textContent:
+    "El verificador lee el RFC letra por letra y comprueba que tenga la forma correcta: 4 letras, 2 dígitos de año, mes del 01 al 12 y día del 01 al 31." }));
+  resultados.forEach((r) => cont.append(el("h3", { textContent: `${r.id} · ${r.rfc}` }), recorrido(r.rfc, r.traza)));
+
+  cont.append(el("h3", { textContent: "Probar un RFC" }));
+  const entrada = el("input", { value: "CUNG850230", maxLength: 40, spellcheck: false, ariaLabel: "RFC a probar" });
+  const salida = el("div");
+  const probar = async () => {
+    const d = await pedir("/afd", { cadena: entrada.value.toUpperCase() });
+    salida.replaceChildren(
+      el("span", { className: "insignia " + (d.acepta ? "ok" : "error"), textContent: d.acepta ? "Formato correcto" : "Formato incorrecto" }),
+      recorrido(d.cadena, d.traza));
+  };
+  entrada.addEventListener("input", probar);
+  const atajos = el("div", { className: "atajos" });
+  ["CUNG851103", "CUNG851303", "CUNG851132", "CUNG850230", "CUNG8511031"].forEach((c) =>
+    atajos.append(el("button", { textContent: c, type: "button", onclick: () => { entrada.value = c; probar(); } })));
+  cont.append(el("div", { className: "probador" }, entrada), atajos, salida,
+    el("p", { className: "nota", textContent:
+      "Ojo: CUNG850230 corresponde al 30 de febrero y aun así este verificador lo acepta, porque solo revisa la forma. Que febrero no tenga 30 días lo revisa el paso de Validación." }));
+  probar();
+}
+
+function render(d) {
+  renderFases(d.fases);
+  renderResultado(d);
+  renderPiezas(d.tokens || []);
+  renderTexto("p-estructura", d.ast || [], "El orden en que quedó organizada la información: qué persona tiene qué datos.",
+    "Aparece cuando el texto tiene al menos una persona bien escrita.", humanoEstructura);
+  renderTexto("p-datos", d.simbolos || [], "Los datos ya revisados y limpios (en mayúsculas, sin acentos, con la Ñ como X).",
+    "Aparece cuando la estructura está bien escrita.", humanoDatos);
+  renderFormato(d.resultados || []);
+  const malas = new Set();
+  (d.errores || []).forEach((e) => { const m = /Línea (\d+)/.exec(e); if (m) malas.add(Number(m[1])); });
+  pintarNumeros(malas);
+}
+
+/* ---- interacción ---- */
+let temporizador, modo = "formulario";
+
+async function analizar() {
+  try {
+    render(await pedir("/analizar", { fuente: $("fuente").value }));
+  } catch (e) {
+    $("resultado").replaceChildren(el("ul", { className: "errores" },
+      el("li", { textContent: "No hay conexión con el servidor. Vuelve a ejecutar servidor.py." })));
+  }
+}
+const pronto = () => { clearTimeout(temporizador); temporizador = setTimeout(analizar, 220); };
+
+function desdeFormulario() {
+  const fuente = fuenteDesdeFormulario();
+  if (fuente === null) { render({ fases: {}, errores: [], resultados: [], tokens: [] }); return; }
+  $("fuente").value = fuente;
+  pronto();
+}
+
+["f-nombre", "f-paterno", "f-materno", "f-fecha"].forEach((id) => $(id).addEventListener("input", desdeFormulario));
+$("fuente").addEventListener("input", () => { pintarNumeros(); pronto(); });
+$("fuente").addEventListener("scroll", () => { $("numeros").scrollTop = $("fuente").scrollTop; });
+
+function cambiarModo(nuevo) {
+  modo = nuevo;
+  document.querySelectorAll("#modos button").forEach((b) => b.classList.toggle("activa", b.dataset.modo === nuevo));
+  $("vista-formulario").hidden = nuevo !== "formulario";
+  $("vista-codigo").hidden = nuevo !== "codigo";
+  if (nuevo === "formulario") desdeFormulario();
+  else { pintarNumeros(); analizar(); }
+}
+$("modos").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) cambiarModo(b.dataset.modo); });
+
+$("pestanas").addEventListener("click", (e) => {
+  const boton = e.target.closest("button");
+  if (!boton) return;
+  document.querySelectorAll("#pestanas button").forEach((b) => b.classList.toggle("activa", b === boton));
+  ["piezas", "estructura", "datos", "formato"].forEach((p) => { $("p-" + p).hidden = p !== boton.dataset.p; });
+});
+
+(async function iniciar() {
+  try {
+    const ejemplos = await (await fetch("/ejemplos")).json();
+    const validos = el("optgroup", { label: "Ejemplos correctos" });
+    const conError = el("optgroup", { label: "Ejemplos con errores" });
+    ejemplos.forEach((ej, i) => {
+      const [texto, esValido] = ETIQUETAS_EJEMPLOS[ej.nombre] || [ej.nombre, true];
+      (esValido ? validos : conError).append(el("option", { value: i, textContent: texto }));
+    });
+    $("ejemplos").append(validos, conError);
+    $("ejemplos").addEventListener("change", () => {
+      if ($("ejemplos").value === "") return;
+      $("fuente").value = ejemplos[$("ejemplos").value].contenido;
+      pintarNumeros();
+      analizar();
+    });
+  } catch (e) { /* sin ejemplos: la página sigue funcionando */ }
+  desdeFormulario();
+})();
+</script>
+</body>
+</html>

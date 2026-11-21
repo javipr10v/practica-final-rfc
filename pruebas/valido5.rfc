@@ -1,0 +1,7 @@
+// P5: letra Ñ en el apellido paterno
+persona alumno1 {
+    nombre = "Juan";
+    paterno = "Guzmán";
+    materno = "Sosa";
+    fecha_nac = 15/09/2003;
+}

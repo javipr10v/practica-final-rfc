@@ -1,0 +1,7 @@
+// P2: partículas y nombre compuesto
+persona alumno1 {
+    nombre = "María Guadalupe";
+    paterno = "De la Cruz";
+    materno = "Núñez";
+    fecha_nac = 03/11/1985;
+}

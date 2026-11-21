@@ -1,0 +1,7 @@
+// E4b: campo repetido dentro del registro
+persona alumno1 {
+    nombre = "Laura";
+    nombre = "Lucía";
+    paterno = "Gómez";
+    fecha_nac = 12/03/1998;
+}

@@ -1,0 +1,7 @@
+// Propio 3: partículas en ambos apellidos y nombre compuesto con MARIA
+persona alumno1 {
+    nombre = "María José";
+    paterno = "De la Garza";
+    materno = "Von Hagen";
+    fecha_nac = 10/10/1992;
+}

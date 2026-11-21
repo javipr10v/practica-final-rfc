@@ -1,0 +1,5 @@
+// E4a: registro sin apellido paterno
+persona alumno1 {
+    nombre = "Laura";
+    fecha_nac = 12/03/1998;
+}
